@@ -1,23 +1,52 @@
-import logo from './logo.svg';
+
+import { useEffect, useState } from 'react';
 import './App.css';
+import AddTransition from './components/AddTransaction';
+import Balance from './components/Balance';
+import Header from './components/Header';
+import IncomeExpense from './components/IncomeExpense';
+import TransitionList from './components/TransactionList';
 
 function App() {
+
+  const [transactions, setTransactions] = useState([]);
+
+  useEffect(() => {
+    fetch("http://localhost:3001/transactions")
+    .then(res => res.json())
+    .then(transactions => {
+      setTransactions(transactions)
+    })
+  }, []);
+
+  const deleteTransaction = (transactionId) => {
+    fetch(`http://localhost:3001/transactions/${transactionId}`, {
+      method : "DELETE"
+    })
+    setTransactions(prevState => prevState.filter(transaction => transaction.id !== transactionId));
+  }
+
+  const addTransaction = (transaction) => {
+    fetch("http://localhost:3001/transactions", {
+      method : "POST",
+      headers : {
+        "Content-Type": "application/json",
+      },
+      body : JSON.stringify(transaction)
+    })
+    setTransactions(prevState => [transaction,...prevState])
+  }
+
+
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <Header/>
+      <div className='container'>
+        <Balance transactions={transactions}/>
+        <IncomeExpense transactions={transactions}/>
+        <TransitionList transactions={transactions} deleteTransaction={deleteTransaction}/>
+        <AddTransition addTransaction={addTransaction}/>
+      </div>
     </div>
   );
 }
